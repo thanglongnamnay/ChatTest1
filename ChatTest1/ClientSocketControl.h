@@ -10,5 +10,6 @@ public:
 	std::string sendMessage(std::string name, std::string message);
 	Message receiveMessage();
 	bool closeSocket();
+	~ClientSocketControl();
 };
 

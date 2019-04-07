@@ -1,4 +1,5 @@
-﻿  MainForm.cpp
+﻿  ClientSocketControl.cpp
+  MainForm.cpp
   NameForm.cpp
   Generating Code...
   ClientSocketControl.obj : MSIL module encountered; incremental linking is disabled for MSIL; performing full link

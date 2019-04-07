@@ -83,8 +83,8 @@ public:
 		        	} else {
 		        		std::cout << "Not duplicated\n";
 		        		Message success;
-		        		strcpy(success.sender, "Server");
-		        		strcpy(success.message, "Success");
+		        		success.setSender("☻");
+		        		success.setMessage("Success");
 		        		int sr = send(clientSocket, (char*)&success, sizeof(Message), 0);
 		        		if (sr == SOCKET_ERROR) {
 							printf("send failed: %d\n", WSAGetLastError());
@@ -95,21 +95,24 @@ public:
 								printf("send failed: %d\n", WSAGetLastError());
 							}
 						}
+						Message welcumMessage;
+						welcumMessage.setSender("☻");
+						welcumMessage.setMessage(name + " just joined.");
+						messageList.push_back(welcumMessage);
+						sendBack(welcumMessage);
 		        	}
 		        } else {
 			        messageList.push_back(recvbuf);
-					std::cout << "Received message: " << recvbuf.sender << ": " << recvbuf.message << std::endl;
+					std::cout << "Received message: " << recvbuf << std::endl;
 			        sendBack(recvbuf);
 			    }
 		    } else if (receiveResult == 0) {
 		        printf("Connection closed.\n");
-			    nameList.erase(name);
-	    		remove(findIndex(clientSocket));
+	    		remove(findIndex(clientSocket), name);
 			    return false;
 		    } else {
 		        printf("recv failed, close client socket: %d\n", WSAGetLastError());
-			    nameList.erase(name);
-	    		remove(findIndex(clientSocket));
+	    		remove(findIndex(clientSocket), name);
 			    return false;
 		    }
 		} while (receiveResult > 0);
@@ -117,8 +120,7 @@ public:
 	    if (shutdown(clientSocket, SD_SEND) == SOCKET_ERROR) {
 	        printf("shutdown failed with error, close client socket: %d\n", WSAGetLastError());
 	    }
-	    nameList.erase(name);
-	    remove(findIndex(clientSocket));
+	    remove(findIndex(clientSocket), name);
 	    return true;
 	}
 	bool acceptSocket() {
@@ -129,13 +131,22 @@ public:
 			clientSocket = accept(primarySocket, NULL, NULL);
 			clientSocketList.push_back(clientSocket);
 			communicateThreadList.push_back(new std::thread(&ServerSocketControl::communicate, this, clientSocket));
+			communicateThreadList.back()->detach();
 		}
 	    // cleanup
 	 //    printf("close client socket\n");
 	 //    closesocket(clientSocket);
 		// return true;
 	}
-	void remove(int index) {
+	void remove(int index, std::string name = "") {
+		if (name.length() > 1) {
+			nameList.erase(name);
+			Message leaveMessage;
+			leaveMessage.setSender("☻");
+			leaveMessage.setMessage(name + " just left.");
+			messageList.push_back(leaveMessage);
+			sendBack(leaveMessage);
+		}
 		communicateThreadList.erase(communicateThreadList.begin() + index);
 		clientSocketList.erase(clientSocketList.begin() + index);
 		std::cout << "ThreadList: " << communicateThreadList.size() << ".\nSocketList: " << clientSocketList.size() << "\n";

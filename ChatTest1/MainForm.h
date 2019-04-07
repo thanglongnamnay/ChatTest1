@@ -162,6 +162,7 @@ namespace ChatTest1 {
 			receiveThread->Start();
 		}
 		System::Void MainForm_Close(System::Object^  sender, System::EventArgs^  e) {
+			messageControl->closeSocket();
 			exit(0);
 		}
 	};

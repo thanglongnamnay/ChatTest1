@@ -12,6 +12,7 @@ bool ClientSocketControl::connectSocket() {
 	std::getline(std::cin, serverIP);
 	if (serverIP.length() == 0) {
 		serverIP = "13.67.73.174";
+		//serverIP = "127.0.0.1";
 	}
 	addrinfo *serverAddressInfo = NULL, hints;
 	ZeroMemory(&hints, sizeof(hints));
@@ -38,8 +39,8 @@ bool ClientSocketControl::connectSocket() {
 }
 std::string ClientSocketControl::sendMessage(std::string name, std::string message) {
 	Message sendBuffer;
-	strcpy(sendBuffer.sender, name.c_str());
-	strcpy(sendBuffer.message, message.c_str());
+	sendBuffer.setSender(name);
+	sendBuffer.setMessage(message);
 	int sendResult = send(primarySocket, (char*)&sendBuffer, sizeof(Message), 0);
 	if (sendResult == SOCKET_ERROR) {
 		printf("send failed with error: %d\n", WSAGetLastError());
@@ -75,4 +76,7 @@ bool ClientSocketControl::closeSocket() {
 		return false;
 	}
 	return true;
+}
+ClientSocketControl::~ClientSocketControl() {
+	closeSocket();
 }
