@@ -39,7 +39,7 @@ namespace ChatTest1 {
 		System::Windows::Forms::Label^  labelName;
 		System::Windows::Forms::TextBox^  nameInput;
 		System::Windows::Forms::Button^  buttonOK;
-	private: System::Windows::Forms::Label^  labelInfo;
+
 			 /// <summary>
 		/// Required designer variable.
 		/// </summary>
@@ -55,7 +55,6 @@ namespace ChatTest1 {
 			this->labelName = (gcnew System::Windows::Forms::Label());
 			this->nameInput = (gcnew System::Windows::Forms::TextBox());
 			this->buttonOK = (gcnew System::Windows::Forms::Button());
-			this->labelInfo = (gcnew System::Windows::Forms::Label());
 			this->SuspendLayout();
 			// 
 			// labelName
@@ -94,22 +93,11 @@ namespace ChatTest1 {
 			this->buttonOK->UseVisualStyleBackColor = true;
 			this->buttonOK->Click += gcnew System::EventHandler(this, &NameForm::buttonOK_Click);
 			// 
-			// labelInfo
-			// 
-			this->labelInfo->AutoSize = true;
-			this->labelInfo->Font = (gcnew System::Drawing::Font(L"Consolas", 13.8F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
-				static_cast<System::Byte>(0)));
-			this->labelInfo->Location = System::Drawing::Point(14, 80);
-			this->labelInfo->Name = L"labelInfo";
-			this->labelInfo->Size = System::Drawing::Size(0, 28);
-			this->labelInfo->TabIndex = 3;
-			// 
 			// NameForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(8, 16);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(282, 123);
-			this->Controls->Add(this->labelInfo);
 			this->Controls->Add(this->buttonOK);
 			this->Controls->Add(this->nameInput);
 			this->Controls->Add(this->labelName);
@@ -125,12 +113,15 @@ namespace ChatTest1 {
 #pragma endregion
 		System::Void buttonOK_Click(System::Object^  sender, System::EventArgs^  e) {
 			String^ name = nameInput->Text;
-			if (name->Length < 1 || name->Length > 127) name = "Bunny";
+			if (name->Length == 0) {
+				name = "Bunny";
+			} else if (name->Length < 5 || name->Length > 127) {
+				System::Windows::Forms::MessageBox::Show(this, "Invalid name, name has to have more than 4 characters.", "Error");
+				return;
+			}
 			messageControl->sendMessage(getSTDString(name), "/VERIFY");
-			std::string msg = messageControl->receiveMessage();
-			int msglen = msg.length();
-			if (msglen < 4) {
-				labelInfo->Text = "Bad name!";
+			if (messageControl->receiveMessage().length() < 4) {
+				System::Windows::Forms::MessageBox::Show(this, "This name is currently in the room, choose another name.", "Error");
 			} else {
 				ChatTest1::MainForm mainForm(messageControl);
 				mainForm.setName(name);

@@ -3,9 +3,12 @@
 #include "pch.h"
 class Message
 {
-public:
+private:
 	char sender[128] = "";
 	char message[256] = "";
+public:
+	std::string getSender();
+	std::string getMessage();
 	void setSender(std::string sender);
 	void setMessage(std::string message);
 	bool isError();

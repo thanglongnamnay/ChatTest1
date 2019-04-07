@@ -17,7 +17,7 @@ std::string MessageControl::sendMessage(std::string name, std::string message) {
 std::string MessageControl::receiveMessage() {
 	Message rm = socketControl->receiveMessage();
 	if (rm.isError()) return "";
-	return "\n" + std::string(rm.sender) + ": " + std::string(rm.message);
+	return "\n" + rm.getSender() + ": " + rm.getMessage();
 }
 std::string MessageControl::closeSocket() {
 	if (socketControl->closeSocket()) {

@@ -37,7 +37,7 @@ public:
 		std::cout << "Listening...\n";
 		return true;
 	}
-	void sendBack(Message respondMessage) {
+	void sendToAllClient(Message respondMessage) {
 		for (auto clientSocket : clientSocketList) {
 			std::cout << "Send back to socket" << clientSocket << "\n";
 			int sendResult = send(clientSocket, (char*)&respondMessage, sizeof(Message), 0);
@@ -55,6 +55,47 @@ public:
 		}
 		return -1;
 	}
+	bool isDuplicate(std::string name) {
+		return nameList.find(name) != nameList.end();
+	}
+	void sendErrorMessage(SOCKET clientSocket) {
+		Message error;
+		if (send(clientSocket, (char*)&error, sizeof(Message), 0) == SOCKET_ERROR) {
+			printf("send failed: %d\n", WSAGetLastError());
+		}
+	}
+	void sendSuccessMessage(SOCKET clientSocket) {
+		Message success;
+		success.setSender("Host");
+		success.setMessage("Success");
+		int sr = send(clientSocket, (char*)&success, sizeof(Message), 0);
+		if (sr == SOCKET_ERROR) {
+			printf("send failed: %d\n", WSAGetLastError());
+		}
+	}
+	void sendWelcumMessage(std::string name) {
+		nameList.insert(name);
+		Message welcumMessage;
+		welcumMessage.setSender("Host");
+		welcumMessage.setMessage(name + " just joined.");
+		messageList.push_back(welcumMessage);
+		sendToAllClient(welcumMessage);
+	}
+	void sendPreviousMessages(SOCKET clientSocket) {
+		for (auto message : messageList) {
+			if (send(clientSocket, (char*)&message, sizeof(Message), 0) == SOCKET_ERROR) {
+				printf("send failed: %d\n", WSAGetLastError());
+			}
+		}
+	}
+	void sendFarewellMessage(std::string name) {
+		nameList.erase(name);
+		Message farewellMessage;
+		farewellMessage.setSender("Host");
+		farewellMessage.setMessage(name + " just left.");
+		messageList.push_back(farewellMessage);
+		sendToAllClient(farewellMessage);
+	}
 	bool communicate(SOCKET clientSocket) {
 		std::string name;
 		std::cout << "Just accept a socket.\n";
@@ -66,45 +107,26 @@ public:
 		// Receive until the peer shuts down the connection
 		int receiveResult;
 		do {
-			Message recvbuf;
-		    receiveResult = recv(clientSocket, (char*)&recvbuf, sizeof(Message), 0);
+			Message receivedMessage;
+		    receiveResult = recv(clientSocket, (char*)&receivedMessage, sizeof(Message), 0);
 		    if (receiveResult > 0) {
 		        printf("Bytes received: %d\n", receiveResult);
-		        if (std::string(recvbuf.message) == "/VERIFY") {
+		        if (receivedMessage.getMessage() == "/VERIFY") {
 		        	std::cout << "Verifying...\n";
-		        	name = std::string(recvbuf.sender);
-		        	if (nameList.find(name) != nameList.end()) {
-		        		Message error;
-		        		std::cout << "Duplicated, sendding back\n";
-		        		int sr = send(clientSocket, (char*)&error, sizeof(Message), 0);
-		        		if (sr == SOCKET_ERROR) {
-							printf("send failed: %d\n", WSAGetLastError());
-						}
+		        	name = receivedMessage.getSender();
+		        	if (isDuplicate(name)) {
+		        		std::cout << "Duplicated, sendding back error.\n";
+		        		sendErrorMessage(clientSocket);
 		        	} else {
 		        		std::cout << "Not duplicated\n";
-		        		Message success;
-		        		success.setSender("☻");
-		        		success.setMessage("Success");
-		        		int sr = send(clientSocket, (char*)&success, sizeof(Message), 0);
-		        		if (sr == SOCKET_ERROR) {
-							printf("send failed: %d\n", WSAGetLastError());
-						}
-		        		nameList.insert(name);
-						for (auto message : messageList) {
-							if (send(clientSocket, (char*)&message, sizeof(Message), 0) == SOCKET_ERROR) {
-								printf("send failed: %d\n", WSAGetLastError());
-							}
-						}
-						Message welcumMessage;
-						welcumMessage.setSender("☻");
-						welcumMessage.setMessage(name + " just joined.");
-						messageList.push_back(welcumMessage);
-						sendBack(welcumMessage);
+		        		sendSuccessMessage(clientSocket);
+						sendPreviousMessages(clientSocket);
+						sendWelcumMessage(name);
 		        	}
 		        } else {
-			        messageList.push_back(recvbuf);
-					std::cout << "Received message: " << recvbuf << std::endl;
-			        sendBack(recvbuf);
+			        messageList.push_back(receivedMessage);
+					std::cout << "Received message: " << receivedMessage << std::endl;
+			        sendToAllClient(receivedMessage);
 			    }
 		    } else if (receiveResult == 0) {
 		        printf("Connection closed.\n");
@@ -139,14 +161,8 @@ public:
 		// return true;
 	}
 	void remove(int index, std::string name = "") {
-		if (name.length() > 1) {
-			nameList.erase(name);
-			Message leaveMessage;
-			leaveMessage.setSender("☻");
-			leaveMessage.setMessage(name + " just left.");
-			messageList.push_back(leaveMessage);
-			sendBack(leaveMessage);
-		}
+		if (name.length() > 1) 
+			sendFarewellMessage(name);
 		communicateThreadList.erase(communicateThreadList.begin() + index);
 		clientSocketList.erase(clientSocketList.begin() + index);
 		std::cout << "ThreadList: " << communicateThreadList.size() << ".\nSocketList: " << clientSocketList.size() << "\n";

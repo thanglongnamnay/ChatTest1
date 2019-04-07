@@ -89,19 +89,22 @@ namespace ChatTest1 {
 				| System::Windows::Forms::AnchorStyles::Right));
 			this->messageList->BackColor = System::Drawing::Color::White;
 			this->messageList->BorderStyle = System::Windows::Forms::BorderStyle::None;
-			this->messageList->Cursor = System::Windows::Forms::Cursors::Default;
+			this->messageList->CausesValidation = false;
+			this->messageList->Cursor = System::Windows::Forms::Cursors::Arrow;
+			this->messageList->DetectUrls = false;
 			this->messageList->Font = (gcnew System::Drawing::Font(L"Consolas", 13.8F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
 			this->messageList->Location = System::Drawing::Point(12, 12);
 			this->messageList->Name = L"messageList";
 			this->messageList->ReadOnly = true;
 			this->messageList->Size = System::Drawing::Size(258, 268);
-			this->messageList->TabIndex = 0;
+			this->messageList->TabIndex = 2;
+			this->messageList->TabStop = false;
 			this->messageList->Text = L"";
+			this->messageList->TextChanged += gcnew System::EventHandler(this, &MainForm::messageList_TextChanged);
 			// 
 			// inputMessage
 			// 
-			this->inputMessage->Anchor = static_cast<System::Windows::Forms::AnchorStyles>((System::Windows::Forms::AnchorStyles::Bottom | System::Windows::Forms::AnchorStyles::Left));
 			this->inputMessage->BorderStyle = System::Windows::Forms::BorderStyle::FixedSingle;
 			this->inputMessage->Font = (gcnew System::Drawing::Font(L"Consolas", 13.8F, System::Drawing::FontStyle::Regular, System::Drawing::GraphicsUnit::Point,
 				static_cast<System::Byte>(0)));
@@ -109,7 +112,7 @@ namespace ChatTest1 {
 			this->inputMessage->MaxLength = 511;
 			this->inputMessage->Name = L"inputMessage";
 			this->inputMessage->Size = System::Drawing::Size(180, 34);
-			this->inputMessage->TabIndex = 1;
+			this->inputMessage->TabIndex = 0;
 			this->inputMessage->KeyUp += gcnew System::Windows::Forms::KeyEventHandler(this, &MainForm::inputMessage_Keyup);
 			// 
 			// SendButton
@@ -165,5 +168,7 @@ namespace ChatTest1 {
 			messageControl->closeSocket();
 			exit(0);
 		}
-	};
+	private: System::Void messageList_TextChanged(System::Object^  sender, System::EventArgs^  e) {
+	}
+};
 }

@@ -29,4 +29,8 @@
 # Executables
 *.out
 *.app
+# misc
 .vs
+*.log
+*.tlog
+*.cache
